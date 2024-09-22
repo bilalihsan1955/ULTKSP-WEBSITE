@@ -1,0 +1,66 @@
+@mixin gradient($top-color, $bottom-color) {
+    background-image: linear-gradient(to bottom, $top-color 0%, $bottom-color 100%);
+  }
+
+  .bg-gradient-purple {
+    /* Use the mixin if you defined it in Step 2 */
+    @include gradient(#D84784, #5A3079);
+    
+    /* Or, define the gradient directly */
+    background-image: linear-gradient(to bottom, #D84784 0%, #5A3079 100%);
+  }
+
+  .bg-dark-purple {
+    
+    /* Or, define the gradient directly */
+    background-color: #5A3079;
+  }
+
+  .bg-dark-purple {
+    
+    /* Or, define the gradient directly */
+    background-color: #5A3079;
+  }
+
+  .text-purple{
+    color: #D84784;
+  }
+  
+  .btn-light-purple {
+    background-color: #D84784; /* warna background default */
+    color: #ffffff; /* warna text default */
+    border: none;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  }
+  
+  .btn-light-purple:hover {
+    background-color: #b92e68; /* warna background hover */
+    color: #fff; /* warna text hover */
+    transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0.12);
+  }
+  
+  .btn-light-purple:active {
+    background-color: #d03d7a; /* warna background klik */
+    color: #fff; /* warna text klik */
+    transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0.24);
+  }
+  
+  .btn-light-purple:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px #ff9ac4; /* warna outline focus */
+  }
+
+  .border-left-purple {
+    border-left: 10px solid #D84784; /* purple color */
+  }
+
+  .border-right-purple {
+    border-right: 10px solid #D84784; /* purple color */
+  }
