@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # CodeIgniter 4 Application Starter
 
 ## What is CodeIgniter?
@@ -66,3 +67,7 @@ Additionally, make sure that the following extensions are enabled in your PHP:
 - json (enabled by default - don't turn it off)
 - [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
 - [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+=======
+# ULTKSP-WEBSITE
+website untuk pelaporan dan pencegahan tindakan kerasan seksual dan perundungan di fakultas vokasi universitas brawijaya
+>>>>>>> d2b850de0d25f4bb22ff277c47bb7d85f7874b6b
