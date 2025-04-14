@@ -1,22 +1,22 @@
 <?= $this->extend('layout/auth/header'); ?>
 <?= $this->section('content'); ?>
-<body class="bg-gradient-purple" style="padding-top: 3em; padding-bottom: 3em; font-family: Poppins, sans-serif;">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-xl-10 col-lg-12 col-md-9">
-                <div class="card o-hidden border-0 shadow-lg my-5">
-                    <div class="card-body p-0">
-                        <div class="row">
-                            <div class="col-lg-12 text-center">
-                                <div class="p-5">
-                                    <h3><?= $message ?></h3>
-                                    <a href="<?= base_url('/SignIn') ?>" class="btn btn-primary mt-4">Login Sekarang</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<main class="flex flex-col md:flex-row items-center justify-center min-h-screen px-4 md:px-8 lg:px-24 py-8 gap-8 md:gap-[100px] overflow-hidden">
+
+  <section class="bg-white rounded-md shadow-lg border p-6 w-full md:w-1/2">
+    <header>
+      <p class="text-black font-Poppins text-lg md:text-xl font-light mb-2">Welcome <span class="font-semibold">!</span></p>
+      <p class="text-black font-Poppins text-xl md:text-1xl font-medium">Aktivasi Akun Pengguna</p>
+      <p class="text-[#F98B88] text-lg font-Poppins font-bold mb-2">ULTKSP <span class="text-[#4F4F4F]">Vokasi UB</span>
+    </header>
+    <div class="w-full mt-6 text-center">
+      <hr class="mb-4 ">
+      <p class="text-black font-Poppins text-center text-2xl md:text-3xl font-medium"><?= $message ?></p>
+      <a href="<?= base_url('/SignIn') ?>">
+        <button
+          class="w-full bg-[#F98B88] text-white font-Poppins font-semibold rounded-md mt-6 hover:bg-[#f66d6a] hover:scale-95 transition duration-300 py-2">Masuk Sekarang</button>
+      </a>
     </div>
-    <?= $this->endsection(); ?>
+  </section>
+</main>
+
+<?= $this->endsection(); ?>

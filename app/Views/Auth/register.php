@@ -1,164 +1,76 @@
 <?= $this->extend('layout/auth/header'); ?>
-
 <?= $this->section('content'); ?>
+<main class="flex flex-col md:flex-row items-center justify-center min-h-screen px-4 md:px-8 lg:px-24 py-8 gap-8 md:gap-[100px]">
+  <section class="md:w-1/2 flex flex-col items-center md:items-start justify-center md:order-1 mb-6">
+    <header class="text-center md:text-right">
+      <h1 class="text-[#F98B88] text-center md:text-left text-3xl lg:text-[52px] md:text-4xl font-Poppins font-bold tracking-wide">ULTKSP <span class="text-[#4F4F4F]">VOKASI</span></h1>
+      <p class="text-[#7E7E7E] text-center md:text-left text-sm font-Poppins mt-2 max-w-[600px] md:text-sm lg:text-md">Pastikan setiap suara terdengar dan tindakan ditangani dengan tepat untuk menciptakan lingkungan aman dan nyaman di Vokasi UB</p>
+    </header>
+  </section>
 
-<body class="bg-gradient-purple" style="padding-top: 2em; padding-bottom: 2em; font-family: Poppins, sans-serif;">
-
-    <div class="container">
-
-        <!-- Outer Row -->
-        <div class="row justify-content-center">
-
-            <div class="col-xl-10 col-lg-12 col-md-9">
-
-                <div class="card o-hidden border-0 shadow-lg my-5">
-                    <div class="card-body p-0">
-                        <!-- Nested Row within Card Body -->
-                        <div class="row">
-                            <div class="col-lg-6 d-flex justify-content-center align-items-center text-center">
-                                <div class="m-5">
-                                    <img src="<?= base_url('assets/images/logo vokasi UB vertikal-01.png') ?>" alt="Logo Universitas Brawijaya" style="max-width: 100%;">
-                                </div>
-                            </div>
-                            <div class=" col-lg-6">
-                                <div class="p-5">
-                                    <?php if (session()->getFlashdata('success')) : ?>
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
-                                            <symbol id="check-circle-fill" viewBox="0 0 16 16">
-                                                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
-                                            </symbol>
-                                        </svg>
-                                        <div id="autoCloseAlert" class="alert alert-success d-flex align-items-center alert-dismissible fade show" role="alert">
-                                            <svg class="bi flex-shrink-0 me-1" role="img" aria-label="Success:" width="20" height="20">
-                                                <use xlink:href="#check-circle-fill" />
-                                            </svg>
-                                            <div class="mx-2">
-                                                <?= session()->getFlashdata('success') ?>
-                                            </div>
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                        </div>
-                                    <?php endif; ?>
-    
-                                    <?php if (session()->getFlashdata('errors')) : ?>
-                                        <symbol id="exclamation-triangle-fill" viewBox="0 0 16 16">
-                                            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" />
-                                        </symbol>
-                                        <div id="autoCloseAlert" class="alert alert-danger d-flex align-items-center alert-dismissible fade show" role="alert">
-                                            <svg class="bi flex-shrink-0 me-1" role="img" aria-label="Danger:" width="20" height="20">
-                                                <use xlink:href="#check-circle-fill" />
-                                            </svg>
-                                            <div class="mx-2">
-                                                <?php foreach (session()->getFlashdata('errors') as $error) : ?>
-                                                    <li><?= esc($error) ?></li>
-                                                <?php endforeach; ?>
-                                            </div>
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                        </div>
-                                    <?php endif; ?>
-                                    <div class="text-center">
-                                        <h1 class="h4 text-gray-900 mb-4">Let's Get Started!</h1>
-                                    </div>
-                                    <!-- frorm -->
-                                    <form class="user" action="<?= base_url('proses_register_user') ?>" method="post">
-                                        <div class="form-group">
-                                            <label for="inputname" class="form-label">Name</label>
-                                            <input required name="nama" type="text" class="form-control form-control-sm <?php if (session()->getFlashdata('error-name')) : ?>border-danger<?php endif; ?>" id="exampleInputname" aria-describedby="nameHelp" placeholder="Your Name" onclick="removeErrorname()">
-                                            <?php if (session()->getFlashdata('error-name')) : ?><label for="inputPassword5" id="error-label-name" class="form-label text-danger"><?= session()->getFlashdata('error-name') ?></label><?php endif; ?>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="inputPassword5" class="form-label">Username</label>
-                                            <input required name="username" type="text" class="form-control form-control-sm" id="exampleInputusername" aria-describedby="usernameHelp" placeholder="Your Username">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="inputPassword5" class="form-label ">Email</label>
-                                            <input required name="email" type="email" class="form-control form-control-sm <?php if (session()->getFlashdata('error-mail')) : ?>border-danger<?php endif; ?>" id="exampleInputemail" placeholder="Example@student.ub.ac.id" onclick="removeError()">
-                                            <?php if (session()->getFlashdata('error-mail')) : ?><label for="inputPassword5" id="error-label" class="form-label text-danger"> <?= session()->getFlashdata('error-mail') ?></label><?php endif; ?>
-                                        </div>
-                                        <div onclick="removeErrorPass()">
-                                            <div class="form-group">
-                                                <label for="inputPassword5" class="form-label">Password</label>
-                                                <input required name="password" type="password" class="form-control form-control-sm <?php if (session()->getFlashdata('error-pass')) : ?>border-danger<?php endif; ?>" id="exampleInputPassword" placeholder="Your Password" oninput="checkPasswordRules()" onclick="removeErrorPass()">
-                                            </div>
-                                            <div class="form-group" onclick="removeErrorPass()">
-                                                <label for="inputPassword5" class="form-label">Confirm Password</label>
-                                                <input required name="confirm_password" type="password" class="form-control form-control-sm <?php if (session()->getFlashdata('error-pass')) : ?>border-danger<?php endif; ?>" id="Inputconfirm_password" placeholder="Repeat Your Password" oninput="removeErrorPass()" onclick="removeErrorPass()">
-                                                <?php if (session()->getFlashdata('error-pass')) : ?><label for="inputPassword5" id="error-label-pass" class="form-label text-danger"> <?= session()->getFlashdata('error-pass') ?></label><?php endif; ?>
-                                            </div>
-                                        </div>
-                                        <p id="password-rules" style="color: red; font-size: 0.8em;">
-                                            Password rules:
-                                        </p>
-                                          <ul id="password-rules-list" style="color: red; font-size: 0.8em;">
-                                            <li id="rule-required">Password is required.</li>
-                                            <li id="rule-min-length">Minimum length: 8 characters.</li>
-                                            <li id="rule-contain-header">Password must contain:
-                                              <ul id="rule-contain-list" style="color: red; font-size: 0.8em;">
-                                                <li id="rule-uppercase">At least one uppercase letter (A-Z).</li>
-                                                <li id="rule-digit">At least one digit (0-9).</li>
-                                                <li id="rule-special-char">At least one special character (!, @, #, $, etc.).</li>
-                                              </ul>
-                                            </li>
-                                          </ul>
-                                        <div class="mb-3">
-                                            <button tyoe="submit" class="btn btn-primary btn-sm btn-block">
-                                                Sign Up
-                                            </button>
-                                    </form>
-                                    <hr>
-                                    <div class="text-center">
-                                        <span>
-                                            Have An Account? <a class="small" href="<?= base_url('/SignIn') ?>">Sign In</a>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
+  <section class="bg-white rounded-md shadow-lg border p-6 w-full md:w-1/2 md:order-2">
+    <!-- Alert section for errors -->
+    <?php if ($errors = session()->getFlashdata('error')) : ?>
+      <?php foreach ($errors as $error) : ?>
+        <div id="error-alert" class="bg-red-100 border text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+          <strong class="font-bold">Error!</strong><br>
+          <span class="block sm:inline"><?= esc($error) ?></span>
+          <span class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onclick="this.parentElement.style.display='none'">
+            <span class="material-icons text-red-500">close</span>
+          </span>
         </div>
+      <?php endforeach; ?>
+    <?php endif; ?>
 
-    </div>
-    <script>
-        const passwordInput = document.getElementById('exampleInputPassword');
-        const passwordRulesList = document.getElementById('password-rules-list');
-        const rules = [{
-                id: 'rule-required',
-                condition: () => passwordInput.value.length > 0
-            },
-            {
-                id: 'rule-min-length',
-                condition: () => passwordInput.value.length >= 8
-            },
-            {
-                id: 'rule-uppercase',
-                condition: () => /[A-Z]/.test(passwordInput.value)
-            },
-            {
-                id: 'rule-digit',
-                condition: () => /\d/.test(passwordInput.value)
-            },
-            {
-                id: 'rule-special-char',
-                condition: () => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(passwordInput.value)
-            }
-        ];
+    <header>
+      <p class="text-black font-Poppins text-lg md:text-xl font-light mb-2">Welcome <span class="font-semibold">!</span></p>
+      <p class="text-black font-Poppins text-2xl md:text-3xl font-medium">Sign up to</p>
+      <p class="text-[#F98B88] text-lg font-Poppins font-bold">ULTKSP <span class="text-[#4F4F4F]">Vokasi UB</span></p>
+    </header>
 
-        function checkPasswordRules() {
-            let allRulesMet = true;
-            rules.forEach(rule => {
-                if (!rule.condition()) {
-                    allRulesMet = false;
-                } else {
-                    document.getElementById(rule.id).style.display = 'none';
-                }
-            });
-            if (allRulesMet) {
-                document.getElementById('rule-contain-header').style.display = 'none';
-                document.getElementById('password-rules').style.display = 'none';
-            }
-        }
-    </script>
-    <?= $this->endsection(); ?>
+    <form class="mt-[15px] md:mt-[20px] lg:mt-[26px]" action="<?= base_url('Register') ?>" method="post">
+    <?= csrf_field() ?>
+      <div class="md:mb-[15px] mt-2">
+        <label for="nama" class="block text-sm font-Poppins font-semibold text-gray-700">Nama</label>
+        <input type="text" id="nama" name="nama" class="w-full border border-gray-300 rounded-md px-4 py-[4px] md:py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[#F98B88]" placeholder="Masukkan Nama Lengkap Anda" />
+      </div>
+      <div class="md:mb-[15px] mt-2">
+        <label for="username" class="block font-Poppins text-sm font-semibold text-gray-700">Username</label>
+        <input type="text" id="username" name="username" class="w-full border border-gray-300 rounded-md px-4 py-[4px] md:py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[#F98B88]" placeholder="Masukkan username Anda" />
+      </div>
+      <div class="md:mb-[15px] mt-2">
+        <label for="email" class="block text-sm font-Poppins font-semibold text-gray-700">Email</label>
+        <input type="email" id="email" name="email" class="w-full border border-gray-300 rounded-md px-4 py-[4px] md:py-2 mt-1 focus:outline-none focus:ring-2 focus:ring-[#F98B88]" placeholder="Gunakan email @student.ub.ac.id" />
+      </div>
+      <div class="md:mb-[15px] mt-2">
+        <label for="password" class="block text-sm font-semibold text-gray-700">Password</label>
+        <div class="relative">
+          <input type="password" id="password" name="password" class="w-full border border-gray-300 rounded-md px-4 py-2 pr-10 mt-2 focus:outline-none focus:ring-2 focus:ring-[#F98B88]" placeholder="Masukkan password" />
+          <button type="button" id="togglePassword" class="absolute right-3 top-4 text-gray-600">
+            <span class="material-icons" id="eyeIcon">visibility</span>
+          </button>
+        </div>
+      </div>
+      
+      <div class="md:mb-[15px] mt-2">
+        <label for="confirm_password" class="block text-sm font-semibold text-gray-700">Confirm Password</label>
+        <div class="relative">
+          <input type="password" id="confirm_password" name="confirm_password" class="w-full border border-gray-300 rounded-md px-4 py-2 pr-10 mt-2 focus:outline-none focus:ring-2 focus:ring-[#F98B88]" placeholder="Konfirmasi password Anda" />
+          <button type="button" id="toggleConfirmPassword" class="absolute right-3 top-4 text-gray-600">
+            <span class="material-icons" id="eyeIconConfirm">visibility</span>
+          </button>
+        </div>
+      </div>
+        <button type="submit" class="w-full h-10 bg-[#F98B88] text-white font-Poppins font-semibold rounded-md mt-6 hover:bg-[#f66d6a] hover:scale-95 transition duration-300 md:h-[50px]">Register</button>
+    </form>
+
+    <footer class="mt-8 text-center">
+      <p class="text-gray-600 md:text-sm font-Poppins text-[15px]">
+        Sudah punya akun ?
+        <a href="<?= base_url('SignIn') ?>" class="text-[#F98B88] font-semibold hover:underline">Masuk</a>
+      </p>
+    </footer>
+    </footer>
+  </section>
+</main>
+<?= $this->endsection(); ?>

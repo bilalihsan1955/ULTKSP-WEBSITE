@@ -33,7 +33,7 @@ class Home extends BaseController
         // Set title secara dinamis
         $data['title'] = "Dashboard User"; // Gantilah sesuai kebutuhan
 
-        return view("dashboard/index", $data);
+        return view("User/index", $data);
     }
 
     public function profile()
@@ -49,7 +49,7 @@ class Home extends BaseController
         $data['title'] = "Profile User"; // Gantilah sesuai kebutuhan
 
         // Kirim data ke view
-        return view('dashboard/profile', $data);
+        return view('User/profile', $data);
     }
 
     public function updateProfile()
@@ -115,8 +115,8 @@ class Home extends BaseController
         // Pastikan ID pengguna ada
         if ($userId) {
             $this->userM->update($userId, $updateData);
-
-            return redirect()->to('/')->with('success', 'Profile updated successfully');
+            $username = session()->get('username');
+            return redirect()->to('Dashboard/Profile/' . $username)->with('success', 'Profile updated successfully');
         } else {
             return redirect()->back()->with('error', 'User not found');
         }

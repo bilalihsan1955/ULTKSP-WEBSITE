@@ -8,6 +8,7 @@ class Create extends Migration
 {
     public function up()
     {
+        // Tabel Users
         $this->forge->addField([
             'id' => [
                 'type' => 'INT',
@@ -79,8 +80,11 @@ class Create extends Migration
             ]
         ]);
         $this->forge->addKey('id', true);
+        $this->forge->addKey('username'); // Index untuk kolom username
+        $this->forge->addKey('email'); // Index untuk kolom email
         $this->forge->createTable('users');
 
+        // Tabel Laporan
         $this->forge->addField([
             'id' => [
                 'type' => 'INT',
@@ -100,6 +104,10 @@ class Create extends Migration
             'isi' => [
                 'type' => 'TEXT'
             ],
+            'foto_file' => [
+                'type' => 'VARCHAR',
+                'constraint' => 255
+            ],
             'date_create' => [
                 'type' => 'TIMESTAMP',
                 'null' => false,
@@ -113,15 +121,49 @@ class Create extends Migration
                 'use_current' => true,
                 'on update' => 'CURRENT_TIMESTAMP'
             ],
-            'foto_file' => [
-                'type' => 'VARCHAR',
-                'constraint' => 255
-            ]
         ]);
         $this->forge->addKey('id', true);
         $this->forge->addForeignKey('id_user', 'users', 'id');
+        $this->forge->addKey('id_user'); // Index untuk kolom id_user
         $this->forge->createTable('laporan');
 
+        // Tabel Foto
+        $this->forge->addField([
+            'id' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => true,
+                'auto_increment' => true
+            ],
+            'id_laporan' => [
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => true
+            ],
+            'file_name' => [
+                'type' => 'VARCHAR',
+                'constraint' => 255
+            ],
+            'date_create' => [
+                'type' => 'TIMESTAMP',
+                'null' => false,
+                'default' => null,
+                'use_current' => true
+            ],
+            'date_edit' => [
+                'type' => 'TIMESTAMP',
+                'null' => false,
+                'default' => null,
+                'use_current' => true,
+                'on update' => 'CURRENT_TIMESTAMP'
+            ],
+        ]);
+        $this->forge->addKey('id', true);
+        $this->forge->addForeignKey('id_laporan', 'laporan', 'id', 'CASCADE', 'CASCADE');
+        $this->forge->addKey('id_laporan'); // Index untuk kolom id_laporan
+        $this->forge->createTable('foto');
+
+        // Tabel Komentar Laporan
         $this->forge->addField([
             'id' => [
                 'type' => 'INT',
@@ -165,6 +207,7 @@ class Create extends Migration
     public function down()
     {
         $this->forge->dropTable('komentar_laporan');
+        $this->forge->dropTable('foto'); // Drop tabel foto
         $this->forge->dropTable('laporan');
         $this->forge->dropTable('users');
     }

@@ -1,83 +1,67 @@
 <?= $this->extend('layout/auth/header'); ?>
 <?= $this->section('content'); ?>
+<main
+  class="flex flex-col md:flex-row items-center justify-center min-h-screen px-4 md:px-8 lg:px-24 py-8 gap-8 md:gap-[100px] overflow-hidden">
 
-<body class="bg-gradient-purple" style="padding-top: 3em; padding-bottom: 3em; font-family: Poppins, sans-serif;">
-
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-xl-10 col-lg-12 col-md-9">
-                <div class="card o-hidden border-0 shadow-lg my-5">
-                    <div class="card-body p-0">
-                        <div class="row">
-                            <div class="col-lg-6 d-flex justify-content-center align-items-center text-center">
-                                <div class="m-5">
-                                    <img src="<?= base_url('assets/images/logo vokasi UB vertikal-01.png') ?>" alt="Logo Universitas Brawijaya" style="max-width: 100%;">
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="p-5">
-                                    <?php if (session()->getFlashdata('success')) : ?>
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
-                                            <symbol id="check-circle-fill" viewBox="0 0 16 16">
-                                                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
-                                            </symbol>
-                                        </svg>
-                                        <div id="autoCloseAlert" class="alert alert-success d-flex align-items-center alert-dismissible fade show" role="alert">
-                                            <svg class="bi flex-shrink-0 me-1" role="img" aria-label="Success:" width="20" height="20">
-                                                <use xlink:href="#check-circle-fill" />
-                                            </svg>
-                                            <div class="mx-2">
-                                                <?= session()->getFlashdata('success') ?>
-                                            </div>
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                        </div>
-                                    <?php endif; ?>
-
-                                    <?php if (session()->getFlashdata('errors')) : ?>
-                                        <symbol id="exclamation-triangle-fill" viewBox="0 0 16 16">
-                                            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" />
-                                        </symbol>
-                                        <div id="autoCloseAlert" class="alert alert-danger d-flex align-items-center alert-dismissible fade show" role="alert">
-                                            <svg class="bi flex-shrink-0 me-1" role="img" aria-label="Danger:" width="20" height="20">
-                                                <use xlink:href="#check-circle-fill" />
-                                            </svg>
-                                            <div class="mx-2">
-                                                <?php foreach (session()->getFlashdata('errors') as $error) : ?>
-                                                    <li><?= esc($error) ?></li>
-                                                <?php endforeach; ?>
-                                            </div>
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                        </div>
-                                    <?php endif; ?>
-                                    <div class="text-center">
-                                        <h1 class="h4 text-gray-900 mb-4">Forgot Password</h1>
-                                    </div>
-                                    <form class="user" action="<?= site_url('/process_forgot_password') ?>" method="post">
-                                        <?= csrf_field() ?>
-                                        <div class="form-group">
-                                            <label for="email" class="form-label">Enter your registered email:</label>
-                                            <input name="email" type="email" class="form-control form-control-sm" id="email" placeholder="Email" required>
-                                            <?php if (session()->getFlashdata('error')) : ?>
-                                                <label for="error-label" id="error-label" class="form-label text-danger"><small><?= session()->getFlashdata('error') ?></small></label>
-                                            <?php endif; ?>
-                                        </div>
-                                        <button type="submit" class="btn btn-primary btn-sm btn-block">
-                                            Send Reset Link
-                                        </button>
-                                    </form>
-                                    <hr>
-                                    <div class="text-center">
-                                        <span>
-                                            Remember your password? <a class="small" href="<?= base_url('/SignIn') ?>">Sign In</a>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  <section class="bg-white rounded-md shadow-lg border p-6 w-full md:w-1/2">
+    <!-- Alert section for errors -->
+    <?php if ($errors = session()->getFlashdata('error')) : ?>
+      <?php
+      // Pastikan $errors adalah array
+      $errors = is_array($errors) ? $errors : [$errors];
+      ?>
+      <?php foreach ($errors as $error) : ?>
+        <div id="error-alert" class="bg-red-100 border text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+          <strong class="font-bold">Error!</strong><br>
+          <span class="block sm:inline"><?= esc($error) ?></span>
+          <span class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onclick="this.parentElement.style.display='none'">
+            <span class="material-icons text-red-500">close</span>
+          </span>
         </div>
-    </div>
+      <?php endforeach; ?>
+    <?php endif; ?>
+    <!-- Alert section for success -->
+    <?php if ($success = session()->getFlashdata('success')) : ?>
+      <?php
+      // Pastikan $success adalah array
+      $success = is_array($success) ? $success : [$success];
+      ?>
+      <?php foreach ($success as $message) : ?>
+        <div id="success-alert" class="bg-green-100 border text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+          <strong class="font-bold">Success!</strong><br>
+          <span class="block sm:inline"><?= esc($message) ?></span>
+          <span class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onclick="this.parentElement.style.display='none'">
+            <span class="material-icons text-green-500">close</span>
+          </span>
+        </div>
+      <?php endforeach; ?>
+    <?php endif; ?>
+    <header>
+      <p class="text-black font-Poppins text-lg md:text-xl font-light mb-2">Welcome <span class="font-semibold">!</span></p>
+      <p class="text-black font-Poppins text-2xl md:text-3xl font-medium">Lupa Kata Sandi<span
+          class="font-semibold"> ?</span></p>
+      </p>
+      <p class="text-[#F98B88] text-lg font-Poppins font-bold mb-2">ULTKSP <span class="text-[#4F4F4F]">Vokasi UB</span>
+    </header>
+    <form action="<?= site_url('/process_forgot_password') ?>" method="post">
+      <?= csrf_field() ?>
+      <div class="mt-6">
+        <label for="Email" class="block text-sm font-semibold font-Poppins text-gray-700">Email Akun</label>
+        <input name="email" type="email" id="Email"
+          class="w-full border border-gray-300 rounded-md px-4 py-2 mt-2 focus:outline-none focus:ring-2 focus:ring-[#F98B88]"
+          placeholder="Masukkan email akun Anda" />
+      </div>
+      <button type="submit"
+        class="w-full bg-[#F98B88] text-white font-Poppins font-semibold rounded-md mt-6 hover:bg-[#f66d6a] hover:scale-95 transition duration-300 py-2">Reset Kata Sandi</button>
+    </form>
 
-    <?= $this->endsection(); ?>
+    <footer class="mt-8 text-center">
+      <p class="text-gray-600 text-sm font-Poppins">
+        Sudah ingat kata sandi Anda?
+        <a href="<?= base_url('SignIn') ?>" class="text-[#F98B88] font-semibold hover:underline">Sign In</a>
+      </p>
+    </footer>
+  </section>
+</main>
+
+<?= $this->endsection(); ?>

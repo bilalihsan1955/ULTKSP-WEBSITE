@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\Auth_Model;
 use App\Models\PostModel;
 use App\Models\Comment_Model;
+use App\Models\FotoModel;
 
 class post extends BaseController
 {
@@ -12,6 +13,7 @@ class post extends BaseController
     protected $userM;
     protected $postM;
     protected $commentM;
+    protected $fotoM;
     protected $encrypter;
 
     public function __construct()
@@ -20,6 +22,7 @@ class post extends BaseController
         $this->userM = new Auth_Model();
         $this->postM = new PostModel();
         $this->commentM = new Comment_Model();
+        $this->fotoM = new FotoModel();
         $this->encrypter = \Config\Services::encrypter();
     }
 
@@ -27,9 +30,8 @@ class post extends BaseController
     {
         $userId = $this->session->get('user_id');
 
-        // $decodedLaporanId = rawurldecode($encryptedLaporanId);
+        // Dekode ID laporan yang dienkripsi
         $laporanId = base64_decode($this->encrypter->decrypt(hex2bin($encryptedLaporanId)));
-
 
         // Ambil data user berdasarkan ID
         $user = $this->userM->find($userId);
@@ -44,17 +46,21 @@ class post extends BaseController
                 ->where('komentar_laporan.id_laporan', $laporanId)
                 ->findAll();
 
+            // Ambil foto terkait laporan
+            $photos = $this->fotoM->where('id_laporan', $laporanId)->findAll();
+
             // Kirim data ke view
             $data = [
                 'user' => $user,
                 'laporan' => $laporan,
                 'comments' => $comments, // Tambahkan data komentar
+                'photos' => $photos, // Tambahkan data foto
                 'title' => esc($laporan['subject'])
             ];
 
-            return view("Report/post", $data);
+            return view("User/Laporan/post", $data);
         } else {
-            return redirect()->to('/')->with('error', 'Laporan tidak ditemukan.');
+            return redirect()->to('Dashboard/')->with('error', 'Laporan tidak ditemukan.');
         }
     }
 
@@ -69,9 +75,9 @@ class post extends BaseController
         }
 
         // Ambil user ID dari session
-        $userId = $this->session->get('user_id'); // Pastikan ID pengguna ada di session
+        $userId = $this->session->get('user_id');
 
-        // $decodedLaporanId = rawurldecode($encryptedLaporanId);
+        // Dekode ID laporan yang dienkripsi
         $laporanId = base64_decode($this->encrypter->decrypt(hex2bin($encryptedLaporanId)));
 
         // Ambil data laporan berdasarkan ID
@@ -81,77 +87,86 @@ class post extends BaseController
             return redirect()->back()->with('error', 'User not found');
         }
 
+        // Ambil data user yang berkomentar
+        $user = $this->userM->find($userId);
+
+        // Data komentar
         $reportData = [
             'id_user' => $userId,
             'id_laporan' => $laporanId,
             'isi' => esc($this->request->getPost('editor')),
         ];
 
+        // Simpan komentar
         $this->commentM->save($reportData);
 
-        return redirect()->back()->with('success', 'Comments submitted successfully');
+        // Kirim email ke semua admin
+        $admins = $this->userM->where('role', 'admin')->findAll();
+        foreach ($admins as $admin) {
+            $this->_sendCommentEmail($admin['email'], $laporan, $user['nama'], $admin['nama'], $reportData['isi']);
+        }
+
+        return redirect()->back()->with('success', 'Comment submitted and emails sent to all admins successfully.');
     }
 
-    public function addReport()
+    private function _sendCommentEmail($recipientEmail, $laporan, $commenter, $ownername, $commentContent)
     {
-        $validation = $this->validate([
-            'subject' => 'required',
-            'editor' => 'required',
-            'photo' => [
-                'uploaded[photo]',
-                'mime_in[photo,image/jpg,image/jpeg,image/png]',
-                'max_size[photo,1024]',
-            ]
+        $email = \Config\Services::email();
+
+        // Konfigurasi email
+        $email->setFrom('moko1@dotsnusa.com', 'ULTKSP VOKASI UB');
+        $email->setTo($recipientEmail);
+        $encrypter = \Config\Services::encrypter();
+        $encryptedLaporanId = bin2hex($encrypter->encrypt(base64_encode($laporan['id'])));
+        $email->setSubject('Laporan Baaru :' . $laporan['subject']);
+
+        // Generate link ke laporan
+        $reportLink = site_url("/Admin/Detail-Laporan/" . url_title(ucwords($laporan['subject']), '-', FALSE) . '/' . $encryptedLaporanId);
+
+        // Siapkan konten email
+        $emailContent = view('emails/comment_notification', [
+            'laporan_title' => $laporan['subject'],
+            'commenter' => $commenter,
+            'ownername' => $ownername,
+            'comment_date' => date('Y-m-d H:i:s'),
+            'comment_content' => $commentContent,
+            'url' => $reportLink
         ]);
 
-        if (!$validation) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        // Set konten email
+        $email->setMessage($emailContent);
+
+        // Kirim email
+        if (!$email->send()) {
+            // Log error jika gagal
+            return redirect()->back()->with('error', 'Failed to send comment email to: ' . $recipientEmail);
         }
-
-        // Ambil user ID dari session
-        $userId = $this->session->get('user_id'); // Pastikan ID pengguna ada di session
-
-        if (!$userId) {
-            return redirect()->back()->with('error', 'User not found');
-        }
-
-        $file = $this->request->getFile('photo');
-        $newName = $file->isValid() && !$file->hasMoved() ? $file->getRandomName() : '';
-
-        if ($file->isValid() && !$file->hasMoved()) {
-            $file->move('uploads/reports/', $newName);
-        }
-
-        $reportData = [
-            'id_user' => $userId,
-            'subject' => esc($this->request->getPost('subject')),
-            'isi' => esc($this->request->getPost('editor')),
-            'foto_file' => $newName,
-        ];
-
-        $this->postM->save($reportData);
-        return redirect()->to('/')->with('success', 'Report submitted successfully');
-    }
-
-    public function post(): string
-    {
-        // return view('welcome_message');
-        return view("report/post");
     }
 
     public function delete($encryptedLaporanId)
     {
-        // $decodedLaporanId = rawurldecode($encryptedLaporanId);
+        // Dekode ID laporan yang dienkripsi
         $laporanId = base64_decode($this->encrypter->decrypt(hex2bin($encryptedLaporanId)));
         $laporan = $this->postM->find($laporanId);
 
         if ($laporan) {
             // Path ke folder tempat foto disimpan
-            $fotoPath = 'uploads/reports/' . $laporan['foto_file'];
+            $fotoPath = 'uploads/reports/';
 
-            // Cek apakah file foto ada, jika ada maka hapus
-            if (is_file($fotoPath)) {
-                unlink($fotoPath);
+            // Ambil semua foto terkait laporan dari tabel foto
+            $fotoList = $this->fotoM->where('id_laporan', $laporanId)->findAll();
+
+            // Loop melalui setiap foto untuk menghapus file dan data dari tabel
+            foreach ($fotoList as $foto) {
+                $filePath = $fotoPath . $foto['file_name'];
+
+                // Cek apakah file foto ada, jika ada maka hapus
+                if (is_file($filePath)) {
+                    unlink($filePath);
+                }
+
+                // Hapus data foto dari tabel
+                $this->fotoM->delete($foto['id']);
             }
 
             // Hapus komentar terkait dari database
@@ -160,11 +175,12 @@ class post extends BaseController
             // Hapus data laporan dari database
             $this->postM->delete($laporanId);
 
-            return redirect()->to('/')->with('success', 'Laporan deleted successfully.');
+            return redirect()->to('Dashboard/')->with('success', 'Laporan dan foto terkait berhasil dihapus.');
         } else {
-            return redirect()->to('/')->with('error', 'Laporan not found.');
+            return redirect()->to('Dashboard/')->with('error', 'Laporan tidak ditemukan.');
         }
     }
+
 
     public function deleteComment($encryptedcommentId)
     {

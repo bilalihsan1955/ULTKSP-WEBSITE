@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\Auth_Model;
 use App\Models\PostModel;
 use App\Models\Comment_Model;
+use App\Models\FotoModel;
 
 class Admin extends BaseController
 {
@@ -12,8 +13,8 @@ class Admin extends BaseController
     protected $userM;
     protected $postM;
     protected $commentM;
+    protected $fotoM;
     protected $encrypter;
-
 
     public function __construct()
     {
@@ -21,6 +22,7 @@ class Admin extends BaseController
         $this->userM = new Auth_Model();
         $this->postM = new PostModel();
         $this->commentM = new Comment_Model();
+        $this->fotoM = new FotoModel();
         $this->encrypter = \Config\Services::encrypter();
     }
 
@@ -34,12 +36,19 @@ class Admin extends BaseController
 
         // Ambil data laporan hanya untuk user yang sedang login
         $data['user'] = $user;
-        $data['laporans'] = $this->postM->orderBy('date_create', 'DESC')->findAll();
-        $data['title'] = "Dashboard Admin";
 
+        // Fetch reports with creator's name and email
+        $data['laporans'] = $this->postM->select('laporan.*, users.nama as creator_name, users.email, users.username, users.foto')
+            ->join('users', 'users.id = laporan.id_user', 'left')
+            ->orderBy('laporan.date_create', 'DESC')
+            ->findAll();
+
+
+        $data['title'] = "Dashboard Admin";
 
         return view("Admin/index.php", $data);
     }
+
     public function profile()
     {
         // Ambil user ID dari session
@@ -130,7 +139,7 @@ class Admin extends BaseController
         // Ambil data user berdasarkan ID
         $user = $this->userM->find($userId);
 
-        // $decodedLaporanId = rawurldecode($encryptedLaporanId);
+        // Decode the encrypted Laporan ID
         $laporanId = base64_decode($this->encrypter->decrypt(hex2bin($encryptedLaporanId)));
 
         // Ambil data laporan berdasarkan ID
@@ -143,11 +152,15 @@ class Admin extends BaseController
                 ->where('komentar_laporan.id_laporan', $laporanId)
                 ->findAll();
 
+            // Ambil foto terkait laporan
+            $photos = $this->fotoM->where('id_laporan', $laporanId)->findAll(); // Assuming you have a photo model to fetch photos
+
             // Kirim data ke view
             $data = [
                 'user' => $user,
                 'laporan' => $laporan,
                 'comments' => $comments, // Tambahkan data komentar
+                'photos' => $photos, // Tambahkan data foto
                 'title' => esc($laporan['subject'])
             ];
 
@@ -156,6 +169,7 @@ class Admin extends BaseController
             return redirect()->to('/Admin')->with('error', 'Laporan tidak ditemukan.');
         }
     }
+
 
     public function addComment($encryptedLaporanId)
     {
@@ -168,9 +182,9 @@ class Admin extends BaseController
         }
 
         // Ambil user ID dari session
-        $userId = $this->session->get('user_id'); // Pastikan ID pengguna ada di session
+        $userId = $this->session->get('user_id');
 
-        // $decodedLaporanId = rawurldecode($encryptedLaporanId);
+        // Dekode ID laporan yang dienkripsi
         $laporanId = base64_decode($this->encrypter->decrypt(hex2bin($encryptedLaporanId)));
 
         // Ambil data laporan berdasarkan ID
@@ -180,15 +194,61 @@ class Admin extends BaseController
             return redirect()->back()->with('error', 'User not found');
         }
 
+        // Ambil data user yang berkomentar
+        $user = $this->userM->find($userId);
+
+        // Data komentar
         $reportData = [
             'id_user' => $userId,
             'id_laporan' => $laporanId,
             'isi' => esc($this->request->getPost('editor')),
         ];
 
+        // Simpan komentar
         $this->commentM->save($reportData);
 
-        return redirect()->back()->with('success', 'Comments submitted successfully');
+        // Kirim email ke user yang membuat laporan
+        $reportOwner = $this->userM->find($laporan['id_user']);
+        if ($reportOwner) {
+            $this->_sendCommentEmail($reportOwner['email'], $laporan, $user['nama'], $reportOwner['nama'], $reportData['isi']);
+            return redirect()->back()->with('success', 'Admin comment submitted and email sent to the report owner successfully.');
+        } else {
+            return redirect()->back()->with('error', 'Report owner not found.');
+        }
+    }
+
+    private function _sendCommentEmail($recipientEmail, $laporan, $commenter, $ownername, $commentContent)
+    {
+        $email = \Config\Services::email();
+
+        // Konfigurasi email
+        $email->setFrom('moko1@dotsnusa.com', 'ULTKSP VOKASI UB');
+        $email->setTo($recipientEmail);
+        $encrypter = \Config\Services::encrypter();
+        $encryptedLaporanId = bin2hex($encrypter->encrypt(base64_encode($laporan['id'])));
+        $email->setSubject('Komentar Baru Di Laporan : ' . $laporan['subject']);
+
+        // Generate link ke laporan
+        $reportLink = site_url("/Dashboard/Detail-Laporan/" . url_title(ucwords($laporan['subject']), '-', FALSE) . '/' . $encryptedLaporanId);
+
+        // Siapkan konten email
+        $emailContent = view('emails/comment_notification', [
+            'laporan_title' => $laporan['subject'],
+            'commenter' => $commenter,
+            'ownername' => $ownername,
+            'comment_date' => date('Y-m-d H:i:s'),
+            'comment_content' => $commentContent,
+            'url' => $reportLink
+        ]);
+
+        // Set konten email
+        $email->setMessage($emailContent);
+
+        // Kirim email
+        if (!$email->send()) {
+            // Log error jika gagal
+            return redirect()->back()->with('error', 'Failed to send comment email to: ' . $recipientEmail);
+        }
     }
 
     public function deleteComment($encryptedId)
@@ -215,5 +275,60 @@ class Admin extends BaseController
             // Jika komentar tidak ditemukan, kembalikan ke halaman laporan
             return redirect()->back()->with('error', 'Komentar tidak ditemukan.');
         }
+    }
+    public function user(): string
+    {
+        // Ambil user ID dari session
+        $userId = $this->session->get('user_id');
+
+        // Ambil data user yang sedang login berdasarkan ID
+        $user = $this->userM->find($userId);
+
+        // Ambil data semua pengguna dengan role "user" dan flag = 1
+        $data['users'] = $this->userM->where('role', 'user')->where('flag', 1)->findAll();
+
+        // Menyimpan data user yang sedang login untuk ditampilkan
+        $data['user'] = $user;
+
+        // Judul halaman
+        $data['title'] = "Dashboard Admin - Manajemen Pengguna";
+
+        return view("Admin/user_management", $data);
+    }
+
+    public function Users($encryptedUserId)
+    {
+        // Ambil user ID dari session
+        $userId = $this->session->get('user_id');
+
+        // Ambil data user yang sedang login berdasarkan ID
+        $user = $this->userM->find($userId);
+
+        // Dekripsi ID pengguna yang dienkripsi
+        try {
+            $userpenggunaId = base64_decode($this->encrypter->decrypt(hex2bin($encryptedUserId)));
+        } catch (\Exception $e) {
+            // Redirect ke halaman User-Management jika dekripsi gagal
+            return redirect()->to('Admin/User-Management')->with('error', 'ID pengguna tidak valid.');
+        }
+
+        // Ambil data pengguna berdasarkan ID
+        $pengguna = $this->userM->find($userpenggunaId);
+
+        if (!$pengguna) {
+            // Redirect jika pengguna tidak ditemukan
+            return redirect()->to('Admin/User-Management')->with('error', 'Pengguna tidak ditemukan.');
+        }
+
+        // Ambil semua laporan yang dibuat oleh pengguna tersebut
+        $laporans = $this->postM->where('id_user', $userpenggunaId)->orderBy('date_create', 'DESC')->findAll();
+
+        // Kirim data pengguna dan laporan ke view
+        return view('Admin/detail_user', [
+            'user' => $user, // Variabel admin yang dikirim ke view
+            'pengguna' => $pengguna,
+            'laporans' => $laporans,
+            'title' => esc($pengguna['nama'])
+        ]);
     }
 }

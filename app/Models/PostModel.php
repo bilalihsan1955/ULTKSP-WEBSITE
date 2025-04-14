@@ -6,7 +6,7 @@ use CodeIgniter\Model;
 
 class PostModel extends Model
 {
-       protected $table = 'laporan';
+    protected $table = 'laporan';
     protected $primaryKey = 'id';
     protected $allowedFields = [
         'id_user', 'subject', 'isi', 'date_create',
@@ -28,5 +28,17 @@ class PostModel extends Model
             ->where('laporan.id_user', $userId)
             ->orderBy('laporan.date_create', 'DESC') // Urutkan berdasarkan date_create terbaru
             ->findAll();
+    }
+
+    // Tambahkan metode untuk menyimpan foto
+    public function saveReportWithPhoto($reportData, $photoData)
+    {
+        // Simpan laporan dan ambil ID laporan yang baru disimpan
+        $this->save($reportData);
+        $lastInsertedId = $this->insertID();
+
+        // Simpan data foto
+        $photoData['id_laporan'] = $lastInsertedId; // Tambahkan relasi ke ID laporan
+        $this->db->table('foto')->insert($photoData); // Pastikan menggunakan tabel 'foto'
     }
 }

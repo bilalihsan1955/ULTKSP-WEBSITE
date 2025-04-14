@@ -57,6 +57,10 @@ ini_set('display_errors', '1');
  */
 
 // Path to the front controller
+define('ROOTPATH', __DIR__ . DIRECTORY_SEPARATOR);
+define('SUPPORTPATH', ROOTPATH . 'vendor/codeigniter4/framework/support/');
+
+
 define('FCPATH', __DIR__ . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR);
 
 // Ensure the current directory is pointing to the front controller's directory

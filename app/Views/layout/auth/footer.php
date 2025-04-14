@@ -1,36 +1,40 @@
 <?= $this->renderSection('content'); ?>
-    <!-- Bootstrap core JavaScript-->
-    <script src="<?= base_url('vendor/jquery/jquery.min.js') ?>"></script>
-    <script src="<?= base_url('vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
-
-    <!-- Core plugin JavaScript-->
-    <script src="<?= base_url('vendor/jquery-easing/jquery.easing.min.js') ?>"></script>
-
-    <!-- Custom scripts for all pages-->
-    <script src="<?= base_url('assets/js/sb-admin-2.min.js') ?>"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
-
-    <script>
-        function removeError() {
-            document.getElementById("error-label").style.display = "none";
-            document.getElementById("exampleInputemail").classList.remove("border-danger");
-        }
-
-        function removeErrorPass() {
-            document.getElementById("error-label-pass").style.display = "none";
-            document.getElementById("exampleInputPassword").classList.remove("border-danger");
-            document.getElementById("Inputconfirm_password").classList.remove("border-danger");
-        }
-
-        function removeErrorname() {
-            document.getElementById("error-label-name").style.display = "none";
-            document.getElementById("exampleInputname").classList.remove("border-danger");
-        }
-    </script>
-    
 </body>
+<script>
+      // Function to close the alert
+      function closeAlert() {
+        const alert = document.getElementById('error-alert');
+        alert.style.display = 'none';
+      }
+    
+      // Set a timeout to automatically close the alert after 5 seconds
+      setTimeout(closeAlert, 5000);
+</script>
+<script>
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eyeIcon');
 
+    const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const eyeIconConfirm = document.getElementById('eyeIconConfirm');
+
+    togglePassword.addEventListener('click', () => {
+        // Toggle the type attribute for password input
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+
+        // Toggle the eye icon
+        eyeIcon.textContent = type === 'text' ? 'visibility_off' : 'visibility';
+    });
+
+    toggleConfirmPassword.addEventListener('click', () => {
+        // Toggle the type attribute for confirm password input
+        const type = confirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        confirmPasswordInput.setAttribute('type', type);
+
+        // Toggle the eye icon
+        eyeIconConfirm.textContent = type === 'text' ? 'visibility_off' : 'visibility';
+    });
+</script>
 </html>

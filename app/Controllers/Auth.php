@@ -26,7 +26,7 @@ class Auth extends BaseController
     {
 
         // Set title untuk halaman login
-        $data['title'] = 'SignIn User';
+        $data['title'] = 'Sign In User';
 
         return view("auth/Index", $data);
     }
@@ -38,32 +38,39 @@ class Auth extends BaseController
             $role = $this->session->get('role');
             // Redirect pengguna yang sudah login ke halaman yang sesuai
             if ($role === 'admin') {
-                return redirect()->to('/Admin')->with('info', 'Anda sudah login sebagai admin.');
+                return redirect()->to('/Admin')->with('error', 'Anda sudah login sebagai admin.');
             } else {
-                return redirect()->to('/')->with('info', 'Anda sudah login.');
+                return redirect()->to('/Dashboard')->with('error', 'Anda sudah login.');
             }
         }
-
-        $username = $this->request->getPost('username');
+    
+        $identifier = $this->request->getPost('username'); // Dapat berupa username atau email
         $password = $this->request->getPost('password');
-
+    
         // Validasi input
-        if (empty($username) || empty($password)) {
-            return redirect()->back()->with('error-pw', 'Username dan password harus diisi.');
+        if (empty($identifier) || empty($password)) {
+            return redirect()->back()->with('error', 'Username/email dan password harus diisi.');
         }
-
-        $user = $this->userauth->getUserByUsername($username);
-
+    
+        // Periksa apakah input adalah email atau username
+        if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+            // Jika berupa email
+            $user = $this->userauth->where('email', $identifier)->first();
+        } else {
+            // Jika berupa username
+            $user = $this->userauth->where('username', $identifier)->first();
+        }
+    
         if ($user) {
-            // Cek apakah key 'is_active' ada di array $user
+            // Cek apakah key 'flag' ada di array $user
             if (!isset($user['flag'])) {
-                return redirect()->back()->with('error-pw', 'Invalid input');
+                return redirect()->back()->with('error', 'Invalid input');
             }
-
+    
             if ($user['flag'] == 0) {
-                return redirect()->back()->with('error-pw', 'Your account is not activated yet. Please check your email');
+                return redirect()->back()->with('error', 'Akun Anda belum diaktifkan. Silakan periksa email Anda.');
             }
-
+    
             if (password_verify($password, $user['password'])) {
                 $session = session();
                 $session->regenerate(); // Regenerasi ID session
@@ -73,89 +80,80 @@ class Auth extends BaseController
                     'role' => $user['role'],
                     'logged_in' => true
                 ]);
-
+    
                 if ($user['role'] == 'admin') {
                     return redirect()->to('/Admin');
                 } else {
-                    return redirect()->to('/');
+                    return redirect()->to('/Dashboard');
                 }
             }
         }
-
-        return redirect()->back()->with('error-pw', 'Username atau password salah.');
+    
+        return redirect()->back()->with('error', 'Username/email atau password salah.');
     }
-
 
     public function form_register()
     {
         // Set title untuk halaman login
-        $data['title'] = 'SignUp User';
+        $data['title'] = 'Sign Up User';
         return view('auth/register', $data);
     }
 
     public function proses_register_user()
     {
         $validation = \Config\Services::validation();
-
+    
         // Lakukan validasi menggunakan rules yang telah didefinisikan
         if (!$validation->run($this->request->getPost(), 'registration')) {
             // Jika validasi gagal, kembali ke form dengan error
             $errors = $validation->getErrors();
-            $errorMessages = implode($errors);
-            return redirect()->back()->withInput()->with('error-pass', '<small>' . $errorMessages . '</small>');
+            return redirect()->back()->withInput()->with('error', $errors); // Mengirim error sebagai array
         }
-
-
+    
         $data = $this->request->getPost();
-
+    
         // Sanitasi input
         foreach ($data as $key => $value) {
             $data[$key] = esc($value);
         }
-
+    
         // Check if email is already used
         $existingUsername = $this->userauth->where('nama', $data['nama'])->first();
         if ($existingUsername) {
-            // Email already exists, redirect back with an error message
-            return redirect()->back()->withInput()->with('error-name', '<small>nama telah digunakan</small>');
+            return redirect()->back()->withInput()->with('error', ['Nama telah digunakan']);
         }
-
+    
         // Validate email domain
         if (!preg_match('/@(ub\.ac\.id|student\.ub\.ac\.id)$/', $data['email'])) {
-            return redirect()->back()->withInput()->with('error-mail', '<small>Pendaftaran hanya diperbolehkan dengan email universitas</small>');
+            return redirect()->back()->withInput()->with('error', ['Pendaftaran hanya diperbolehkan dengan email universitas']);
         }
-
+    
         $existingUser = $this->userauth->where('email', $data['email'])->first();
         if ($existingUser) {
-            // Email already exists, redirect back with an error message
-            return redirect()->back()->withInput()->with('error-mail', '<small>Email telah digunakan</small>');
+            return redirect()->back()->withInput()->with('error', ['Email telah digunakan']);
         }
-
+    
         if (!isset($data['confirm_password']) || $data['password'] !== $data['confirm_password']) {
-            return redirect()->back()->withInput()->with('error-pass', '<small>Password dan konfirmasi password tidak cocok.</small>');
+            return redirect()->back()->withInput()->with('error', ['Password dan konfirmasi password tidak cocok.']);
         }
-
-
+    
         if (isset($data['password'])) {
             $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
-            $data['status'] = 'user'; // Assuming this sets the user role or status
-            $data['flag'] = 0; // Assuming this is used to track some sort of activation or confirmation status
+            $data['status'] = 'user';
+            $data['flag'] = 0;
             $data['token'] = md5(bin2hex(random_bytes(16)));
-            // $data['date_register']= date("Y-m-d H:i:s"); 
         }
-
+    
         unset($data['confirm_password']);
-
+    
         if ($this->userauth->save($data)) {
-            // Assuming 'email' is a field in your form and hence in $data
             $this->_sendConfirmationEmail($data['email'], $data['token']);
-            // Redirect to login with a success message
-            return redirect()->to('SignIn')->with('message', 'Registration successful! Please check your email for confirmation.');
+            return redirect()->to('SignIn')->with('message', 'Registrasi berhasil! Silakan periksa email Anda untuk konfirmasi.');
         } else {
-            // Handle failure, e.g., show an error message
-            return redirect()->back()->withInput()->with('error', 'Registration failed. Please try again.');
+            return redirect()->back()->withInput()->with('error', ['Registrasi gagal. Silakan coba lagi.']);
         }
     }
+    
 
     private function _sendConfirmationEmail($userEmail, $token)
     {
@@ -174,7 +172,7 @@ class Auth extends BaseController
 
         if (!$email->send()) {
             // Optionally, log the error or handle it as required
-            log_message('error', 'Failed to send confirmation email to: ' . $userEmail);
+            return redirect()->back()->with('error', 'Gagal mengirim email konfirmasi ke:  ' . $userEmail);
         }
     }
 
@@ -201,7 +199,7 @@ class Auth extends BaseController
 
         $data = [
             'message' => $message,
-            'title' => "Reset Password",
+            'title' => "Aktivasi Akun Anda",
 
         ];
 
@@ -229,13 +227,13 @@ class Auth extends BaseController
 
         // Validate input
         if (empty($email)) {
-            return redirect()->back()->with('error', 'Email must be provided.');
+            return redirect()->back()->with('error', 'Email harus diisi!');
         }
 
         // Check if email exists
         $user = $this->userauth->where('email', $email)->first();
         if (!$user) {
-            return redirect()->back()->with('error', 'Email not found.');
+            return redirect()->back()->with('error', 'Email tidak ditemukan.');
         }
 
         // Generate token and save it
@@ -243,16 +241,16 @@ class Auth extends BaseController
         $updateResult = $this->userauth->update($user['id'], ['token' => $token]);
 
         if (!$updateResult) {
-            return redirect()->back()->with('error', 'Failed to update token.');
+            return redirect()->back()->with('error', 'Gagal memperbarui token.');
         }
 
         // Log token
-        log_message('info', 'Generated token: ' . $token);
+        return redirect()->back()->with('error', 'Generated token: ');
 
         // Send reset email
         $this->_sendResetEmail($email, $token);
 
-        return redirect()->to('forgot-password')->with('success', 'Please check your email for password reset instructions.');
+        return redirect()->to('forgot-password')->with('success', 'Silakan periksa email Anda untuk instruksi pengaturan ulang kata sandi.');
     }
 
     private function _sendResetEmail($userEmail, $token)
@@ -270,7 +268,7 @@ class Auth extends BaseController
         $email->setMessage($emailContent);
 
         if (!$email->send()) {
-            log_message('error', 'Failed to send reset email to: ' . $userEmail);
+            return redirect()->back()->with('error', 'Gagal mengirim email ke: ' . $userEmail);
         }
     }
 
@@ -281,7 +279,7 @@ class Auth extends BaseController
 
         if (!$user) {
             // Handle invalid token
-            return redirect()->to('/forgot-password')->with('error', 'Invalid or expired token.');
+            return redirect()->to('/forgot-password')->with('error', 'Token tidak valid atau telah kedaluwarsa.');
         }
 
         // Kirim data ke view
@@ -302,16 +300,16 @@ class Auth extends BaseController
                 'label'  => 'Password',
                 'rules'  => 'required|min_length[8]|regex_match[/^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/]',
                 'errors' => [
-                    'required' => 'Password is required.',
-                    'min_length' => 'Password must be at least 8 characters long.',
-                    'regex_match' => 'Password must contain at least one uppercase letter, one number, and one special character.',
+                    'required' => 'Kolom password wajib diisi.',
+                    'min_length' => 'Password harus terdiri dari minimal 8 karakter.',
+                    'regex_match' => 'Password harus memiliki minimal satu huruf besar, satu angka, dan satu karakter khusus.',
                 ]
             ]
         ];
 
         if (!$this->validate($rules)) {
             // Validation failed, return back with errors
-            return redirect()->back()->withInput()->with('errors', $this->validation->getErrors());
+            return redirect()->back()->withInput()->with('error', $this->validation->getErrors());
         }
 
         $token = $this->request->getPost('token');
@@ -321,17 +319,17 @@ class Auth extends BaseController
 
         // Validate input
         if (empty($password) || empty($confirm_password)) {
-            return redirect()->back()->with('error', ' password fields are required.');
+            return redirect()->back()->with('error', ' Kolom password wajib diisi.');
         }
 
         if ($password !== $confirm_password) {
-            return redirect()->back()->with('error', 'Passwords do not match.');
+            return redirect()->back()->with('error', 'Confirm Passwords tidak cocok.');
         }
 
         // Find user by token
         $user = $this->userauth->where('token', $token)->first();
         if (!$user) {
-            return redirect()->back()->with('error', 'Invalid or expired token.');
+            return redirect()->back()->with('error', 'Token tidak valid atau telah kedaluwarsa.');
         }
 
         // Update password and clear token
@@ -340,6 +338,6 @@ class Auth extends BaseController
             'token' => null // Clear the token after password reset
         ]);
 
-        return redirect()->to('/SignIn')->with('message', 'Password has been reset successfully. You can now log in with your new password.');
+        return redirect()->to('/SignIn')->with('message', 'Password Anda berhasil direset. Sekarang Anda bisa masuk dengan password baru Anda.');
     }
 }
